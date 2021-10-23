@@ -10,6 +10,7 @@
 package com.kimandhwang.batch.domain;
 
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * create on 2021/10/24.
@@ -24,13 +25,14 @@ import lombok.Getter;
  * @since 지원하는 자바버전 (ex : 5+ 5이상)
  */
 @Getter
+@ToString
 public class Player {
-  private long id;
-  private String name;
-  private int age;
-  private int height;
-  private int weight;
-  private String position;
+  private final long id;
+  private final String name;
+  private final int age;
+  private final int height;
+  private final int weight;
+  private final String position;
 
   public Player(long id, String name, int age, int height, int weight, String position) {
     this.id = id;

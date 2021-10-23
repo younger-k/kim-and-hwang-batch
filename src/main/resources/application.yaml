@@ -1,0 +1,12 @@
+
+spring:
+  batch:
+    job:
+      names: ${job.name:NONE}
+---
+spring:
+  datasource:
+    hikari:
+      username: user
+      password: 1234
+    url: jdbc:mysql://localhost:33306/spring_batch

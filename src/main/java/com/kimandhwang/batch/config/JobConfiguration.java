@@ -19,8 +19,12 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 
 /**
  * create on 2021/10/24.
@@ -38,8 +42,8 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class JobConfiguration {
 
-  private JobBuilderFactory jobBuilderFactory;
-  private StepBuilderFactory stepBuilderFactory;
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
 
   public JobConfiguration(
           JobBuilderFactory jobBuilderFactory,
@@ -49,16 +53,16 @@ public class JobConfiguration {
   }
 
   @Bean
-  public Job SoccerPlayerJob() {
-    return this.jobBuilderFactory.get("SoccerPlayerJob")
+  public Job soccerPlayerJob() throws Exception {
+    return this.jobBuilderFactory.get("soccerPlayerJob")
             .incrementer(new RunIdIncrementer())
-            .start(this.SoccerPlayerStep())
+            .start(this.soccerPlayerStep())
             .build();
   }
 
   @Bean
-  public Step SoccerPlayerStep() {
-    return this.stepBuilderFactory.get("SoccerPlayerStep")
+  public Step soccerPlayerStep() throws Exception {
+    return this.stepBuilderFactory.get("soccerPlayerStep")
             .<Player, Player>chunk(100)
             .reader(playerCsvReader())
 //            .processor()
@@ -66,13 +70,46 @@ public class JobConfiguration {
             .build();
   }
 
-  private ItemReader<? extends Player> playerCsvReader() {
-    return null;
+  private ItemReader<? extends Player> playerCsvReader() throws Exception {
+    DefaultLineMapper<Player> lineMapper = new DefaultLineMapper<>();
+    DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
+
+    // UID,Name,NationID,Born,Age,IntCaps,IntGoals,U21Caps,U21Goals,Height,Weight,AerialAbility,CommandOfArea,Communication,Eccentricity,Handling,Kicking,OneOnOnes,Reflexes,RushingOut,TendencyToPunch,Throwing,Corners,Crossing,Dribbling,Finishing,FirstTouch,Freekicks,Heading,LongShots,Longthrows,Marking,Passing,PenaltyTaking,Tackling,Technique,Aggression,Anticipation,Bravery,Composure,Concentration,Vision,Decisions,Determination,Flair,Leadership,OffTheBall,Positioning,Teamwork,Workrate,Acceleration,Agility,Balance,Jumping,LeftFoot,NaturalFitness,Pace,RightFoot,Stamina,Strength,Consistency,Dirtiness,ImportantMatches,InjuryProness,Versatility,Adaptability,Ambition,Loyalty,Pressure,Professional,Sportsmanship,Temperament,Controversy,PositionsDesc,Goalkeeper,Sweeper,Striker,AttackingMidCentral,AttackingMidLeft,AttackingMidRight,DefenderCentral,DefenderLeft,DefenderRight,DefensiveMidfielder,MidfielderCentral,MidfielderLeft,MidfielderRight,WingBackLeft,WingBackRight
+    String fields = "UID,Name,NationID,Born,Age,IntCaps,IntGoals,U21Caps,U21Goals,Height,Weight,AerialAbility,CommandOfArea,Communication,Eccentricity,Handling,Kicking,OneOnOnes,Reflexes,RushingOut,TendencyToPunch,Throwing,Corners,Crossing,Dribbling,Finishing,FirstTouch,Freekicks,Heading,LongShots,Longthrows,Marking,Passing,PenaltyTaking,Tackling,Technique,Aggression,Anticipation,Bravery,Composure,Concentration,Vision,Decisions,Determination,Flair,Leadership,OffTheBall,Positioning,Teamwork,Workrate,Acceleration,Agility,Balance,Jumping,LeftFoot,NaturalFitness,Pace,RightFoot,Stamina,Strength,Consistency,Dirtiness,ImportantMatches,InjuryProness,Versatility,Adaptability,Ambition,Loyalty,Pressure,Professional,Sportsmanship,Temperament,Controversy,PositionsDesc,Goalkeeper,Sweeper,Striker,AttackingMidCentral,AttackingMidLeft,AttackingMidRight,DefenderCentral,DefenderLeft,DefenderRight,DefensiveMidfielder,MidfielderCentral,MidfielderLeft,MidfielderRight,WingBackLeft,WingBackRight";
+    String[] fieldsArr = fields.split(",");
+    tokenizer.setNames(fieldsArr);
+    lineMapper.setLineTokenizer(tokenizer);
+
+    // 필드 매퍼 세팅
+    lineMapper.setFieldSetMapper(fieldSet -> {
+      long id = fieldSet.readLong("UID");
+      String name = fieldSet.readString("Name");
+      int age = fieldSet.readInt("Age");
+      int height = fieldSet.readInt("Height");
+      int weight = fieldSet.readInt("Weight");
+      String position = fieldSet.readString("PositionsDesc");
+
+      return new Player(id, name, age, height, weight, position);
+    });
+
+    FlatFileItemReader<Player> itemReader = new FlatFileItemReaderBuilder<Player>()
+            .name("playerCsvReader")
+            .encoding("UTF-8")
+            .resource(new ClassPathResource("csv/dataset.csv"))
+            .linesToSkip(1)
+            .lineMapper(lineMapper)
+            .build();
+
+    itemReader.afterPropertiesSet();
+
+    return itemReader;
   }
 
   private ItemWriter<? super Player> playerMongoWriter() {
-    return null;
+    return items -> {
+      log.info("writer is called");
+      items.forEach(item -> log.info(item.toString()));
+    };
   }
-
 
 }
