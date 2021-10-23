@@ -1,0 +1,13 @@
+version: '3.1'
+services:
+  batch_mongo_db:
+    container_name: batch_mongo_db
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - ~/docker-repo/batch_mongo_db:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 1234
