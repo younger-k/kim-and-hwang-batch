@@ -10,7 +10,7 @@
 ## Batch Jobs
 
 - FootballJob
-  Football Manager 2017 게임의 선수에 대한 dataset `csv` 파일을 DB로 저장하는 배치. (약 10만개의 row)
+  Football Manager 2017 게임의 선수에 대한 dataset `csv` 파일을 DB로 저장하는 배치. (약 1만개의 row)
 
 ## Skills
 
